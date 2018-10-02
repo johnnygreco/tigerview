@@ -1,4 +1,4 @@
-
+import lsst.pipe.base
 import lsst.afw.image
 import lsst.afw.display
 import lsst.afw.geom
@@ -57,15 +57,16 @@ class Viewer(object):
         else:
             assert patch is not None
 
-        data_id = dict(tract=tract, 
-                       patch=patch.decode("utf-8"), 
-                       filter='HSC-'+band.upper())
+        if type(patch) == bytes:
+            patch = patch.decode("utf-8")
+
+        data_id = dict(tract=tract, patch=patch, filter='HSC-'+band.upper())
         exp = self.butler.get(self.coadd_label, data_id, immediate=True)
         disp = lsst.afw.display.Display(frame)
         disp.mtv(exp)
         disp.setMaskTransparency(mask_trans)
         disp.scale(*scale)
-        self.frame[frame] = disp
+        self.frame[frame] = lsst.pipe.base.Struct(disp=disp, exp=exp)
 
     def display_cutout(self, ra, dec, radius, band='i', frame=1, zoom=1, 
                        mask_trans=100, scale=['linear', 'zscale']):
@@ -78,4 +79,4 @@ class Viewer(object):
         disp.setMaskTransparency(mask_trans)
         disp.zoom(zoom)
         disp.scale(*scale)
-        self.frame[frame] = disp
+        self.frame[frame] = lsst.pipe.base.Struct(disp=disp, exp=cutout)
