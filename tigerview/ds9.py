@@ -1,3 +1,4 @@
+import numpy as np
 import lsst.pipe.base
 import lsst.afw.image
 import lsst.afw.display
@@ -57,7 +58,7 @@ class Viewer(object):
         else:
             assert patch is not None
 
-        if type(patch) == bytes:
+        if type(patch) == bytes or type(patch) == np.bytes_:
             patch = patch.decode("utf-8")
 
         data_id = dict(tract=tract, patch=patch, filter='HSC-'+band.upper())
