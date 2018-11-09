@@ -101,3 +101,4 @@ ENV/
 *.out
 *.synctex.gz
 scratch
+sandbox

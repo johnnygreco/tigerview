@@ -20,6 +20,8 @@ class Viewer(object):
         self.rerun = rerun 
         self.coadd_label = coadd_label
         self.frame = {}
+        self.patch = {}
+        self.cutout = {}
 
     @property
     def butler(self):
@@ -63,6 +65,7 @@ class Viewer(object):
 
         data_id = dict(tract=tract, patch=patch, filter='HSC-'+band.upper())
         exp = self.butler.get(self.coadd_label, data_id, immediate=True)
+        self.patch[frame] = exp
         disp = lsst.afw.display.Display(frame)
         disp.mtv(exp)
         disp.setMaskTransparency(mask_trans)
@@ -75,9 +78,25 @@ class Viewer(object):
         cutout = make_cutout(ra, dec, radius, band, skymap=self.skymap,
                              rerun=self.rerun, butler=self.butler, 
                              coadd_label=self.coadd_label)
+        self.cutout[frame] = cutout
         disp = lsst.afw.display.Display(frame)
         disp.mtv(cutout)
         disp.setMaskTransparency(mask_trans)
         disp.zoom(zoom)
         disp.scale(*scale)
         self.frame[frame] = lsst.pipe.base.Struct(disp=disp, exp=cutout)
+
+    def display_source(self, ra, dec, radius, theta=0.0, ellip=None, 
+                       frame=1, color='green', markersize=10):
+
+        if ellip is None:
+            marker = 'o'
+        else:
+            a = radius
+            b = a * (1 - ellip)
+            shape = dict(a=a, b=b, theta=np.deg2rad(theta))
+            marker = lsst.afw.geom.ellipses.Axes(**shape)
+
+        coord = utils.make_afw_coords([ra, dec])
+        x, y = self.cutout[frame].getWcs().skyToPixel(coord)
+        self.frame[frame].disp.dot(marker, x, y, ctype=color, size=markersize)
