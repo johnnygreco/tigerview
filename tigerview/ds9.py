@@ -21,7 +21,7 @@ class Viewer(object):
         self.coadd_label = coadd_label
         self.frame = {}
         self.patch = {}
-        self.cutout = {}
+        self.exp = {}
 
     @property
     def butler(self):
@@ -65,7 +65,7 @@ class Viewer(object):
 
         data_id = dict(tract=tract, patch=patch, filter='HSC-'+band.upper())
         exp = self.butler.get(self.coadd_label, data_id, immediate=True)
-        self.patch[frame] = exp
+        self.exp[frame] = exp
         disp = lsst.afw.display.Display(frame)
         disp.mtv(exp)
         disp.setMaskTransparency(mask_trans)
@@ -87,7 +87,7 @@ class Viewer(object):
         self.frame[frame] = lsst.pipe.base.Struct(disp=disp, exp=cutout)
 
     def display_source(self, ra, dec, radius, theta=0.0, ellip=None, 
-                       frame=1, color='green', markersize=10):
+                       frame=1, color='green'):
 
         if ellip is None:
             marker = 'o'
@@ -98,5 +98,5 @@ class Viewer(object):
             marker = lsst.afw.geom.ellipses.Axes(**shape)
 
         coord = utils.make_afw_coords([ra, dec])
-        x, y = self.cutout[frame].getWcs().skyToPixel(coord)
-        self.frame[frame].disp.dot(marker, x, y, ctype=color, size=markersize)
+        x, y = self.exp[frame].getWcs().skyToPixel(coord)
+        self.frame[frame].disp.dot(marker, x, y, ctype=color, size=radius)
